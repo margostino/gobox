@@ -7,26 +7,6 @@ import (
 	"os"
 )
 
-type Client struct {
-	Url         string `yaml:"url"`
-	RequestFile string `yaml:"requestFile"`
-	CallsNumber int    `yaml:"callsNumber"`
-}
-
-type Server struct {
-	Port            string `yaml:"port"`
-	Host            string `yaml:"host"`
-	Path            string `yaml:"path"`
-	ResponseFile    string `yaml:"responseFile"`
-	HealthcheckPath string `yaml:"healthcheckPath"`
-	HealthcheckFile string `yaml:"healthcheckFile"`
-}
-
-type Configuration struct {
-	Clients []*Client `yaml:"clients"`
-	Servers []*Server `yaml:"servers"`
-}
-
 func (s *Server) GetAddress() string {
 	return s.Host + ":" + s.Port
 }
@@ -37,6 +17,10 @@ func GetServerConfig(path string) []*Server {
 
 func GetClientConfig(path string) []*Client {
 	return GetConfig(path).Clients
+}
+
+func GetStrikerConfig(path string) *Striker {
+	return GetConfig(path).Striker
 }
 
 func GetConfig(file string) *Configuration {
