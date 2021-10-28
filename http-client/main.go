@@ -34,8 +34,10 @@ func execute(wg *sync.WaitGroup, requestId int, data *os.File, url string) {
 	start := time.Now()
 	//RegisterTime("Request", requestId)
 	response := http.Call(client, request)
-	end := time.Now()
-	fmt.Printf("Request #%d Elapsed time %s\n", requestId, end.Sub(start).String())
-	http.Print(response)
+	if response != nil {
+		end := time.Now()
+		fmt.Printf("Request #%d Elapsed time %s\n", requestId, end.Sub(start).String())
+		http.Print(response)
+	}
 	wg.Done()
 }
