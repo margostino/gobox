@@ -1,21 +1,24 @@
 clients:
-  - url: "http://localhost:10000/api"
+  - url: "http://localhost:10001/variables"
     requestFile: "./data/request.json"
     callsNumber: 20
-  - url: "http://localhost:10001/api2"
+  - url: "http://localhost:10000/variables"
     requestFile: "./data/request.json"
-    callsNumber: 10
+    callsNumber: 20
+  - url: "http://localhost:60587/graphql"
+    requestFile: "./data/request.json"
+    callsNumber: 20
 
 servers:
   - port: "10000"
     host: "localhost"
-    path: "/api"
+    path: "/variables"
     healthcheckPath: "/healthcheck"
     responseFile: "./data/response.json"
     healthcheckFile: "./data/healthcheck.json"
   - port: "10001"
     host: "localhost"
-    path: "/api2"
+    path: "/variables"
     healthcheckPath: "/healthcheck"
     responseFile: "./data/response.json"
     healthcheckFile: "./data/healthcheck.json"
