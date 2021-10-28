@@ -7,23 +7,34 @@ import (
 	"net/http"
 )
 
-var configuration = common.GetServerConfig("./configuration/configuration.yml")
+var responseMocks = make(map[string]string)
+var healthcheckMocks = make(map[string]string)
 
 func main() {
+	var servers = common.GetServerConfig("./configuration/configuration.yml")
+	wg := common.WaitGroup(len(servers))
+	for _, server := range servers {
+		responseMocks[server.GetAddress()] = server.ResponseFile
+		healthcheckMocks[server.GetAddress()] = server.HealthcheckFile
+		go start(server)
+	}
+	wg.Wait()
+}
+
+func start(server *common.Server) {
 	router := gin.Default()
-	router.POST(configuration.Path, response)
-	router.POST(configuration.HealthcheckPath, healthcheck)
-	router.Run("localhost:" + configuration.Port)
+	router.POST(server.Path, response)
+	router.POST(server.HealthcheckPath, healthcheck)
+	router.Run(server.Host + ":" + server.Port)
 }
 
 func response(c *gin.Context) {
-	response, _ := factory.GetPayload(configuration.ResponseFile)
+	response, _ := factory.GetPayload(responseMocks[c.Request.Host])
 	//time.Sleep(4000 * time.Millisecond)
 	c.IndentedJSON(http.StatusOK, response)
 }
 
 func healthcheck(c *gin.Context) {
-	response, _ := factory.GetPayload(configuration.HealthcheckFile)
-	//time.Sleep(4000 * time.Millisecond)
+	response, _ := factory.GetPayload(healthcheckMocks[c.Request.Host])
 	c.IndentedJSON(http.StatusOK, response)
 }

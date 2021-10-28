@@ -10,11 +10,12 @@ import (
 type Client struct {
 	Url         string `yaml:"url"`
 	RequestFile string `yaml:"requestFile"`
-	CallsNumber int `yaml:"callsNumber"`
+	CallsNumber int    `yaml:"callsNumber"`
 }
 
 type Server struct {
 	Port            string `yaml:"port"`
+	Host            string `yaml:"host"`
 	Path            string `yaml:"path"`
 	ResponseFile    string `yaml:"responseFile"`
 	HealthcheckPath string `yaml:"healthcheckPath"`
@@ -22,16 +23,20 @@ type Server struct {
 }
 
 type Configuration struct {
-	Client Client `yaml:"client"`
-	Server Server `yaml:"server"`
+	Clients []*Client `yaml:"clients"`
+	Servers []*Server `yaml:"servers"`
 }
 
-func GetServerConfig(path string) *Server {
-	return &GetConfig(path).Server
+func (s *Server) GetAddress() string {
+	return s.Host + ":" + s.Port
 }
 
-func GetClientConfig(path string) *Client {
-	return &GetConfig(path).Client
+func GetServerConfig(path string) []*Server {
+	return GetConfig(path).Servers
+}
+
+func GetClientConfig(path string) []*Client {
+	return GetConfig(path).Clients
 }
 
 func GetConfig(file string) *Configuration {
