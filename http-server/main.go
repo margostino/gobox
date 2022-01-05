@@ -29,9 +29,18 @@ func start(server *common.Server) {
 }
 
 func response(c *gin.Context) {
-	response, _ := factory.GetPayload(responseMocks[c.Request.Host])
 	//time.Sleep(4000 * time.Millisecond)
+	//success(c)
+	failure(c)
+}
+
+func success(c *gin.Context)  {
+	response, _ := factory.GetPayload(responseMocks[c.Request.Host])
 	c.IndentedJSON(http.StatusOK, response)
+}
+
+func failure(c *gin.Context)  {
+	c.AbortWithStatus(500)
 }
 
 func healthcheck(c *gin.Context) {

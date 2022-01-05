@@ -12,7 +12,7 @@ import (
 
 func main() {
 	var clients = common.GetClientConfig("./configuration/configuration.yml")
-	callsNumber := 20
+	callsNumber := 5000 // TODO: get from config
 	wg := common.WaitGroup(callsNumber)
 	for _, client := range clients {
 		data := io.OpenFile(client.RequestFile)
@@ -22,8 +22,11 @@ func main() {
 }
 
 func call(wg *sync.WaitGroup, callsNumber int, data *os.File, url string) {
+	//var waitTime time.Duration
 	for i := 0; i < callsNumber; i++ {
 		go execute(wg, i, data, url)
+		//waitTime = time.Duration(rand.Intn(1) + 1000)
+		time.Sleep(1000 * time.Millisecond)
 	}
 }
 
@@ -36,7 +39,7 @@ func execute(wg *sync.WaitGroup, requestId int, data *os.File, url string) {
 	response := http.Call(client, request)
 	if response != nil {
 		end := time.Now()
-		fmt.Printf("Request #%d Elapsed time %s\n", requestId, end.Sub(start).String())
+		fmt.Printf("Request #%d Elapsed time %s with status: %s\n", requestId, end.Sub(start).String(), response.Status)
 		http.Print(response)
 	}
 	wg.Done()
