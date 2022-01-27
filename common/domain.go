@@ -1,5 +1,11 @@
 package common
 
+const (
+	SuccessEnabled = iota
+	FailureEnabled
+	RandomnessEnabled
+)
+
 type Striker struct {
 	Url string `yaml:"url"`
 }
@@ -17,6 +23,7 @@ type Server struct {
 	ResponseFile    string `yaml:"responseFile"`
 	HealthcheckPath string `yaml:"healthcheckPath"`
 	HealthcheckFile string `yaml:"healthcheckFile"`
+	HotStatusPath   string `yaml:"hotStatusPath"`
 }
 
 type Configuration struct {
