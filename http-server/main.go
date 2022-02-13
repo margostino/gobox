@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/margostino/gobox/common"
 	"github.com/margostino/gobox/factory"
-	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -38,7 +37,7 @@ func start(server *common.Server) {
 	router := gin.Default()
 	router.POST(server.Path, response)
 	router.POST(server.HealthcheckPath, healthcheck)
-	router.POST(server.HotStatusPath, updateHotStatus) // TODO: PUT operation?
+	router.PUT(server.HotStatusPath, updateHotStatus)
 	router.Run(server.Host + ":" + server.Port)
 }
 
@@ -84,12 +83,20 @@ func healthcheck(c *gin.Context) {
 func updateHotStatus(c *gin.Context) {
 
 	if status, ok := hotStatus[c.Request.Host]; ok {
-		request := HotStatusRequest{}
-		if c.ShouldBind(&request) == nil {
-			log.Println("u.Name")
-			status = getHotStatusFrom(&request)
+		//request := HotStatusRequest{}
+		//if c.ShouldBind(&request) == nil {
+		//	status = getHotStatusFrom(&request)
+		//	hotStatus[c.Request.Host] = status
+		//	c.IndentedJSON(http.StatusNoContent, status)
+		//}
+		param := c.Query("id")
+		status = getHotStatusFrom(param)
+
+		if status >= 0 {
 			hotStatus[c.Request.Host] = status
-			c.IndentedJSON(http.StatusCreated, status)
+			c.IndentedJSON(http.StatusNoContent, status)
+		} else {
+			c.IndentedJSON(http.StatusBadRequest, "status param is wrong")
 		}
 	} else {
 		c.IndentedJSON(http.StatusNotFound, "config not found")
@@ -98,17 +105,17 @@ func updateHotStatus(c *gin.Context) {
 }
 
 // TODO: define another simpler contract to avoid strings
-func getHotStatusFrom(request *HotStatusRequest) int {
-	if request.Status == "success" {
+func getHotStatusFrom(param string) int {
+	if param == "success" {
 		return common.SuccessEnabled
 	}
-	if request.Status == "failure" {
+	if param == "failure" {
 		return common.FailureEnabled
 	}
-	if request.Status == "randomness" {
+	if param == "randomness" {
 		return common.RandomnessEnabled
 	}
-	return common.SuccessEnabled
+	return -1
 }
 
 func isRandomnessEnabled(c *gin.Context) bool {

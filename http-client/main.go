@@ -5,32 +5,47 @@ import (
 	"github.com/margostino/gobox/common"
 	"github.com/margostino/gobox/http"
 	"github.com/margostino/gobox/io"
-	"os"
+	"log"
 	"sync"
 	"time"
 )
 
+var wg *sync.WaitGroup
+
 func main() {
 	var clients = common.GetClientConfig("./configuration/configuration.yml")
-	callsNumber := 1 // TODO: get from config
-	wg := common.WaitGroup(callsNumber)
+	delta := getDelta(clients)
+	wg = common.WaitGroup(delta)
 	for _, client := range clients {
-		data := io.OpenFile(client.RequestFile)
-		go call(wg, callsNumber, data, client.Url)
+		data, err := io.OpenFile(client.RequestFile)
+		if err != nil {
+			log.Println(fmt.Sprintf("Cannot open file %s", client.RequestFile), err)
+			wg.Add(-client.CallsNumber)
+		} else {
+			go call(client.CallsNumber, data, client.Url)
+		}
 	}
 	wg.Wait()
 }
 
-func call(wg *sync.WaitGroup, callsNumber int, data *os.File, url string) {
+func getDelta(clients []*common.Client) int {
+	var delta = 0
+	for _, client := range clients {
+		delta += client.CallsNumber
+	}
+	return delta
+}
+
+func call(callsNumber int, data []byte, url string) {
 	//var waitTime time.Duration
 	for i := 0; i < callsNumber; i++ {
-		go execute(wg, i, data, url)
-		//waitTime = time.Duration(rand.Intn(1) + 1000)
-		//time.Sleep(1000 * time.Millisecond)
+		go execute(i, data, url)
+		//waitTime = time.Duration(rand.Intn(1) + 5000)
+		//time.Sleep(waitTime * time.Millisecond)
 	}
 }
 
-func execute(wg *sync.WaitGroup, requestId int, data *os.File, url string) {
+func execute(requestId int, data []byte, url string) {
 	payload := io.ReadAll(data)
 	client := http.GetClient()
 	request := http.GetRequest(url, payload)
