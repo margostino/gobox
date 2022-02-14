@@ -14,6 +14,7 @@ type Client struct {
 	Url         string `yaml:"url"`
 	RequestFile string `yaml:"requestFile"`
 	CallsNumber int    `yaml:"callsNumber"`
+	MaxStepTime int    `yaml:"maxStepTime"`
 }
 
 type Server struct {

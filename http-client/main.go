@@ -6,6 +6,7 @@ import (
 	"github.com/margostino/gobox/http"
 	"github.com/margostino/gobox/io"
 	"log"
+	"math/rand"
 	"sync"
 	"time"
 )
@@ -22,7 +23,7 @@ func main() {
 			log.Println(fmt.Sprintf("Cannot open file %s", client.RequestFile), err)
 			wg.Add(-client.CallsNumber)
 		} else {
-			go call(client.CallsNumber, data, client.Url)
+			go call(client.CallsNumber, client.MaxStepTime, data, client.Url)
 		}
 	}
 	wg.Wait()
@@ -36,13 +37,16 @@ func getDelta(clients []*common.Client) int {
 	return delta
 }
 
-func call(callsNumber int, data []byte, url string) {
-	//var waitTime time.Duration
+func call(callsNumber int, maxStepTime int, data []byte, url string) {
 	for i := 0; i < callsNumber; i++ {
 		go execute(i, data, url)
-		//waitTime = time.Duration(rand.Intn(1) + 5000)
-		//time.Sleep(waitTime * time.Millisecond)
+		wait(maxStepTime)
 	}
+}
+
+func wait(maxStepTime int) {
+	waitTime := time.Duration(rand.Intn(1) + maxStepTime)
+	time.Sleep(waitTime * time.Millisecond)
 }
 
 func execute(requestId int, data []byte, url string) {
