@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/margostino/gobox/common"
 	"github.com/margostino/gobox/factory"
+	"io"
+	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -36,12 +39,19 @@ func setDefaultHotStatus(server *common.Server) {
 func start(server *common.Server) {
 	router := gin.Default()
 	router.POST(server.Path, response)
-	router.POST(server.HealthcheckPath, healthcheck)
 	router.PUT(server.HotStatusPath, updateHotStatus)
+	router.GET(server.HealthcheckPath, healthcheck)
+	router.GET("/ping", pong)
 	router.Run(server.Host + ":" + server.Port)
 }
 
 func response(c *gin.Context) {
+	request, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(fmt.Sprintf("Request: %s", string(request)))
+
 	if isSuccessEnabled(c) {
 		success(c)
 	} else if isFailureEnabled(c) {
@@ -78,6 +88,10 @@ func failure(c *gin.Context) {
 func healthcheck(c *gin.Context) {
 	response, _ := factory.GetPayload(healthcheckMocks[c.Request.Host])
 	c.IndentedJSON(http.StatusOK, response)
+}
+
+func pong(c *gin.Context) {
+	c.String(http.StatusOK, "pong")
 }
 
 func updateHotStatus(c *gin.Context) {
