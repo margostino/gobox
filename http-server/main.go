@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/margostino/gobox/common"
@@ -9,6 +10,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -18,6 +20,16 @@ var hotStatus = make(map[string]int)
 
 type HotStatusRequest struct {
 	Status string `json:"status"`
+}
+
+type Payload struct {
+	Namespace string            `json:"namespace"`
+	Variables []string          `json:"variables"`
+	Arguments map[string]string `json:"arguments"`
+}
+
+type Request struct {
+	Payload Payload `json:"payload"`
 }
 
 func main() {
@@ -46,14 +58,20 @@ func start(server *common.Server) {
 }
 
 func response(c *gin.Context) {
-	request, err := io.ReadAll(c.Request.Body)
+	var request Request
+	jsonRequest, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Println(fmt.Sprintf("Request: %s", string(request)))
+
+	json.Unmarshal(jsonRequest, &request)
+
+	log.Println(fmt.Sprintf("Request: %s", string(jsonRequest)))
 
 	if isSuccessEnabled(c) {
-		success(c)
+		filename := strings.Replace(responseMocks[c.Request.Host], "{0}", request.Payload.Namespace, -1)
+		response, _ := factory.GetPayload(filename)
+		successWithResponse(c, response)
 	} else if isFailureEnabled(c) {
 		failure(c)
 	} else if isRandomnessEnabled(c) {
@@ -78,6 +96,10 @@ func randomness(c *gin.Context) {
 
 func success(c *gin.Context) {
 	response, _ := factory.GetPayload(responseMocks[c.Request.Host])
+	c.IndentedJSON(http.StatusOK, response)
+}
+
+func successWithResponse(c *gin.Context, response *interface{}) {
 	c.IndentedJSON(http.StatusOK, response)
 }
 
