@@ -22,14 +22,10 @@ type HotStatusRequest struct {
 	Status string `json:"status"`
 }
 
-type Payload struct {
+type Request struct {
 	Namespace string            `json:"namespace"`
 	Variables []string          `json:"variables"`
 	Arguments map[string]string `json:"arguments"`
-}
-
-type Request struct {
-	Payload Payload `json:"payload"`
 }
 
 func main() {
@@ -69,7 +65,7 @@ func response(c *gin.Context) {
 	log.Println(fmt.Sprintf("Request: %s", string(jsonRequest)))
 
 	if isSuccessEnabled(c) {
-		filename := strings.Replace(responseMocks[c.Request.Host], "{0}", request.Payload.Namespace, -1)
+		filename := strings.Replace(responseMocks[c.Request.Host], "{0}", request.Namespace, -1)
 		response, _ := factory.GetPayload(filename)
 		successWithResponse(c, response)
 	} else if isFailureEnabled(c) {
