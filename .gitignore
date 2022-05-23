@@ -19,3 +19,5 @@
 
 data/
 configuration/configuration.yml
+
+.DS_Store
