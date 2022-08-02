@@ -3,11 +3,17 @@ package http
 import (
 	"bytes"
 	"fmt"
+	"github.com/margostino/gobox/common"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"time"
+)
+
+const (
+	POST = "POST"
+	GET  = "GET"
 )
 
 func GetClient() *http.Client {
@@ -16,16 +22,19 @@ func GetClient() *http.Client {
 	}
 }
 
-func GetRequest(url string, payload *bytes.Buffer) *http.Request {
-	request, err := http.NewRequest("POST", url, payload)
+func GetRequest(config *common.Client, payload *bytes.Buffer) *http.Request {
+	request, err := http.NewRequest(config.Method, config.Url, payload)
 	if err != nil {
 		fmt.Print(err.Error())
 		os.Exit(1)
 	}
-	//id := uuid.New()
-	//request.Header.Add("Id", id.String())
-	request.Header.Add("Content-Type", "application/json")
-	request.SetBasicAuth("username1", "password")
+	if config.ContentType != "" {
+		request.Header.Add("Content-Type", config.ContentType)
+	}
+	if config.Username != "" && config.Password != "" {
+		request.SetBasicAuth(config.Username, config.Password)
+	}
+
 	return request
 }
 

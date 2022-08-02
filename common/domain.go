@@ -15,6 +15,11 @@ type Client struct {
 	RequestFile string `yaml:"requestFile"`
 	CallsNumber int    `yaml:"callsNumber"`
 	MaxStepTime int    `yaml:"maxStepTime"`
+	Method      string `yaml:"method"`
+	ContentType string `yaml:"contentType"`
+	Username    string `yaml:"username"`
+	Password    string `yaml:"password"`
+	Enabled     bool   `yaml:"enabled"`
 }
 
 type Server struct {

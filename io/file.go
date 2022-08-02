@@ -12,6 +12,7 @@ func OpenFile(file string) ([]byte, error) {
 	var buf bytes.Buffer
 	tee := io.TeeReader(data, &buf)
 	bytes, _ := ioutil.ReadAll(tee)
+	data.Close()
 	return bytes, err
 }
 
