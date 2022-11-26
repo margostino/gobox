@@ -4,114 +4,113 @@ import (
 	"fmt"
 	"github.com/go-rod/rod"
 	"github.com/margostino/gobox/common"
-	"strconv"
+	"golang.org/x/net/html"
+	"io/ioutil"
+	"net/http"
+	"os"
 	"strings"
-	"time"
 )
 
-var allJobPosts = make([]*JobPost, 0)
-
-type JobPost struct {
-	Position    string
-	Company     string
-	Location    string
-	Benefit     string
-	PostDate    string
-	CaptureDate time.Time
+type Attributes struct {
+	Key   string
+	Value string
 }
 
-func startFrom(url string, value int) string {
-	param := strconv.Itoa(value)
-	return fmt.Sprintf("%s&start=%s", url, param)
+type Token struct {
+	Type       html.TokenType
+	Data       string
+	Attributes []*Attributes
 }
 
 func main() {
-	var index = 0
-	var factor = 50
-	var isEnd = false
-	baseUrl := "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
-	params := "?keywords=software engineer&location=stockholm&trk=public_jobs_jobs-search-bar_search-submit"
-	partialUrl := fmt.Sprintf("%s%s", baseUrl, params)
-	//url := "https://www.linkedin.com/jobs/search?keywords=software%20engineer&location=Stockholm%2C%20Stockholm%20County%2C%20Sweden&trk=public_jobs_jobs-search-bar_search-submit&position=1&pageNum=0"
+	url := "https://earth.org/sea-level-rise-nyc/" //"https://earth.org/"
+
+	res, err := http.Get(url)
+	if err != nil {
+		fmt.Printf("error making http request: %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("client: status code: %d\n", res.StatusCode)
+
+	text, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Printf("client: could not read response body: %s\n", err)
+		os.Exit(1)
+	}
+
+	data := parse(string(text))
+	data = nil
+	fmt.Println(data)
+
+}
+
+func isValidTokenType(tokenType html.TokenType) bool {
+	return tokenType == html.StartTagToken || tokenType == html.SelfClosingTagToken || tokenType == html.TextToken
+}
+
+func isValidData(token html.Token) bool {
+	return !strings.Contains(token.Data, "\n")
+}
+
+func parse(text string) []*Token {
+
+	var tokens = make([]*Token, 0)
+	tkn := html.NewTokenizer(strings.NewReader(text))
+
+	for {
+		tokenType := tkn.Next()
+		currentToken := tkn.Token()
+
+		if isValidTokenType(tokenType) && isValidData(currentToken) {
+			attrs := make([]*Attributes, 0)
+			for _, attr := range currentToken.Attr {
+				att := &Attributes{
+					Key:   attr.Key,
+					Value: attr.Val,
+				}
+				attrs = append(attrs, att)
+			}
+			token := &Token{
+				Type:       tokenType,
+				Data:       currentToken.Data,
+				Attributes: attrs,
+			}
+			tokens = append(tokens, token)
+		}
+
+		if tokenType == html.ErrorToken {
+			return tokens
+		}
+
+	}
+}
+
+func scrapper() {
+	//url := "https://earth.org/impact-and-reach/"
+	url := "https://en.wikipedia.org/wiki/The_Lord_of_the_Rings"
+	//url := "https://en.wikipedia.org/wiki/Dune_(novel)"
 	browser := rod.New().MustConnect()
 	defer browser.Close()
 
-	for ok := true; ok; ok = !isEnd {
-		url := startFrom(partialUrl, index+factor)
-		page := browser.MustPage(url).MustWaitLoad()
-		entries, err := page.Elements("li")
-		common.Check(err)
+	page := browser.MustPage(url).MustWaitLoad()
 
-		if len(entries) == 0 {
-			isEnd = true
-		}
+	//heading, err := page.Element("#firstHeading")
+	//common.Check(err)
+	//title, err := heading.Text()
+	//common.Check(err)
+	//println(title)
 
-		for _, entry := range entries {
-			card, err := entry.Element(".base-search-card__info")
-			if err != nil {
-				println(err.Error())
-				break
-			} else {
-				text, err := card.Text()
-				common.Check(err)
-				parts := strings.SplitN(text, "\n", -1)
+	//bodyElements, err := page.Elements("#bodyContent")
+	//common.Check(err)
+	//for _, element := range bodyElements {
+	//	text, _ := element.Text()
+	//	println(text)
+	//}
 
-				if len(parts) > 0 {
-					jobPost := &JobPost{
-						Position:    common.GetOrDefault(0, parts),
-						Company:     common.GetOrDefault(1, parts),
-						Location:    common.GetOrDefault(2, parts),
-						Benefit:     common.GetOrDefault(3, parts),
-						PostDate:    common.GetOrDefault(4, parts),
-						CaptureDate: time.Now(),
-					}
-
-					allJobPosts = append(allJobPosts, jobPost)
-				}
-				println(text)
-			}
-		}
+	bodyElements, err := page.Elements(".infobox.vcard")
+	common.Check(err)
+	for _, element := range bodyElements {
+		text, _ := element.Text()
+		println(text)
 	}
-
-	println("end")
-	//for ok := true; ok; ok = !isEnd {
-	//	err := page.Keyboard.Press(input.End)
-	//
-	//	if err != nil {
-	//		println(err)
-	//	}
-	//
-	//	moreButtonElement := page.MustElement(".infinite-scroller__show-more-button")
-	//
-	//	if strings.Contains(moreButtonElement.Object.Description, "infinite-scroller__show-more-button--visible") {
-	//		//println(moreButtonElement.Object.Description)
-	//		err = page.Keyboard.Release(input.End)
-	//		wait := page.MustWaitRequestIdle("")
-	//		println(wait)
-	//		println(moreButtonElement.Text())
-	//		a := moreButtonElement.MustClick()
-	//		println(a)
-	//		//isEnd = true
-	//	}
-	//	//moreButtonElementVisible, err := page.Element(".infinite-scroller__show-more-button .infinite-scroller__show-more-button--visible")
-	//	//println(err)
-	//	//println(moreButtonElementVisible)
-	//}
-	//
-	////elements, _ := page.Elements("*")
-	//element := page.MustElement(".jobs-search__results-list")
-	//elements, _ := element.Elements("li")
-	//for _, value := range elements {
-	//	card := value.MustElement(".base-search-card__info")
-	//	println(" ")
-	//	println(card.Text())
-	//
-	//	//text, _ := value.Text()
-	//	//println(text)
-	//	//if text == moreCommentTextSelector {
-	//	//	btn := value.MustElement("button")
-	//	//	btn.Click(proto.InputMouseButtonLeft)
-	//	//	break
-	//	//}
-	//}
 }

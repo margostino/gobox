@@ -17,6 +17,7 @@ import (
 var responseMocks = make(map[string]string)
 var healthcheckMocks = make(map[string]string)
 var hotStatus = make(map[string]int)
+var isTimeout bool
 
 type HotStatusRequest struct {
 	Status string `json:"status"`
@@ -29,6 +30,7 @@ type Request struct {
 }
 
 func main() {
+	isTimeout = false
 	var servers = common.GetServerConfig("./configuration/configuration.yml")
 	wg := common.WaitGroup(len(servers))
 	for _, server := range servers {
@@ -65,6 +67,13 @@ func response(c *gin.Context) {
 	log.Println(fmt.Sprintf("Request: %s", string(jsonRequest)))
 
 	if isSuccessEnabled(c) {
+		if !isTimeout {
+			time.Sleep(1000 * time.Millisecond)
+			isTimeout = true
+			log.Printf("First timeout")
+		} else {
+			log.Printf("No more timeout")
+		}
 		filename := strings.Replace(responseMocks[c.Request.Host], "{0}", request.Namespace, -1)
 		response, _ := factory.GetPayload(filename)
 		successWithResponse(c, response)
