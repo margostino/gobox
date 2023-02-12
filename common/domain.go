@@ -32,8 +32,16 @@ type Server struct {
 	HotStatusPath   string `yaml:"hotStatusPath"`
 }
 
+type DynamicTimer struct {
+	Port         string `yaml:"port"`
+	Host         string `yaml:"host"`
+	Path         string `yaml:"path"`
+	ResponseFile string `yaml:"responseFile"`
+}
+
 type Configuration struct {
-	Clients []*Client `yaml:"clients"`
-	Servers []*Server `yaml:"servers"`
-	Striker *Striker  `yaml:"striker"`
+	Clients      []*Client     `yaml:"clients"`
+	Servers      []*Server     `yaml:"servers"`
+	Striker      *Striker      `yaml:"striker"`
+	DynamicTimer *DynamicTimer `yaml:"dynamic_timer"`
 }

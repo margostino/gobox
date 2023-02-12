@@ -11,8 +11,16 @@ func (s *Server) GetAddress() string {
 	return s.Host + ":" + s.Port
 }
 
+func (s *DynamicTimer) GetAddress() string {
+	return s.Host + ":" + s.Port
+}
+
 func GetServerConfig(path string) []*Server {
 	return GetConfig(path).Servers
+}
+
+func GetDynamicTimerConfig(path string) *DynamicTimer {
+	return GetConfig(path).DynamicTimer
 }
 
 func GetClientConfig(path string) []*Client {

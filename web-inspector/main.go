@@ -23,7 +23,7 @@ type Token struct {
 }
 
 func main() {
-	url := "https://earth.org/sea-level-rise-nyc/" //"https://earth.org/"
+	url := "https://se.linkedin.com/jobs/view/software-developer-at-alstom-3408622507?refId=xI1fGHwTS2jiQpL0QEAqqg%3D%3D&trackingId=zq%2FOQlEWyDZfVraGtUZnkQ%3D%3D&position=1&pageNum=0&trk=public_jobs_jserp-result_search-card" //"https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software%20engineer&location=sweden&start=1" //"https://earth.org/sea-level-rise-nyc/" //"https://earth.org/"
 
 	res, err := http.Get(url)
 	if err != nil {
@@ -38,9 +38,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	data := parse(string(text))
-	data = nil
-	fmt.Println(data)
+	tokens := parse(string(text))
+
+	for _, token := range tokens {
+		if token.Type == html.TextToken && len(token.Data) > 20 && strings.Contains(token.Data, "Leading societies to a low carbon future, Alstom develops and markets") {
+			fmt.Println(token.Data)
+		}
+	}
 
 }
 
@@ -61,7 +65,7 @@ func parse(text string) []*Token {
 		tokenType := tkn.Next()
 		currentToken := tkn.Token()
 
-		if isValidTokenType(tokenType) && isValidData(currentToken) {
+		if true || isValidTokenType(tokenType) && isValidData(currentToken) {
 			attrs := make([]*Attributes, 0)
 			for _, attr := range currentToken.Attr {
 				att := &Attributes{
@@ -81,7 +85,6 @@ func parse(text string) []*Token {
 		if tokenType == html.ErrorToken {
 			return tokens
 		}
-
 	}
 }
 
