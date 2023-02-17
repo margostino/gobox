@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/compute v1.9.0 // indirect
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-rod/rod v0.112.2
+	github.com/gocarina/gocsv v0.0.0-20230123225133-763e25b40669 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/googleapis/gax-go/v2 v2.5.1 // indirect
 	github.com/marianogappa/sqlparser v0.0.0-20210802195049-c86231987420 // indirect

@@ -4,7 +4,9 @@ import (
 	"archive/zip"
 	"encoding/csv"
 	"fmt"
+	"github.com/gocarina/gocsv"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -28,8 +30,20 @@ func readCSVFromUrl(url string) ([][]string, error) {
 	return data, nil
 }
 
+func readCsv(response io.ReadCloser) ([][]string, error) {
+	defer response.Close()
+	reader := csv.NewReader(response)
+	reader.Comma = ','
+	data, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
 func main() {
 	url := "https://api.worldbank.org/v2/en/indicator/SI.POV.DDAY?downloadformat=csv"
+	//url := "https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/20th century deaths in US - CDC/20th century deaths in US - CDC.csv"
 
 	out, err := os.Create("test.zip")
 	defer out.Close()
@@ -39,8 +53,12 @@ func main() {
 
 	resp, err := http.Get(url)
 	defer resp.Body.Close()
+
 	n, err := io.Copy(out, resp.Body)
 	print(n)
+
+	data, err := readCsv(resp.Body)
+	print(data)
 
 	dst := "output"
 	archive, err := zip.OpenReader("test.zip")
@@ -85,4 +103,42 @@ func main() {
 		fileInArchive.Close()
 	}
 
+	records := readCsvFile("edsc_collection.csv")
+	fmt.Println(records)
+	for _, record := range records {
+		fmt.Println(record.DataProvider)
+	}
+}
+
+type NasaEarthData struct {
+	DataProvider    string `csv:"Data Provider"`
+	ShortName       string `csv:"Short Name"`
+	Version         string `csv:"Version"`
+	EntryTitle      string `csv:"Entry Title"`
+	ProcessingLevel string `csv:"Processing Level"`
+	Platform        string `csv:"Platform"`
+	StartTime       string `csv:"Start Time"`
+	EndTime         string `csv:"End Time"`
+}
+
+func readCsvFile(filePath string) []*NasaEarthData {
+	f, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal("Unable to read input file "+filePath, err)
+	}
+	defer f.Close()
+
+	var records []*NasaEarthData
+
+	if err := gocsv.UnmarshalFile(f, &records); err != nil {
+		panic(err)
+	}
+
+	//csvReader := csv.NewReader(f)
+	//records, err := csvReader.ReadAll()
+	//if err != nil {
+	//	log.Fatal("Unable to parse file as CSV for "+filePath, err)
+	//}
+
+	return records
 }
